@@ -1,0 +1,4 @@
+esphome:
+  name: ${system_name}
+  friendly_name: ${friendly_name}
+  comment: ${device_description}

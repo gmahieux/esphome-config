@@ -1,0 +1,173 @@
+substitutions:
+  system_name: coverremote
+  friendly_name: "Cover Remote"
+  device_description: "Controls the 10 channels cover remote"
+  press_duration: 250ms
+  channel_press_duration: 300ms
+  release_duration: 200ms
+  command_idle_duration: 600ms
+  channel_count: "6"
+  sleep_timeout_sec: "10"
+
+packages:
+  device: !include commons/device.yaml
+  wifi: !include 
+    file: commons/wifi.yaml
+    vars:
+      ip: 192.168.1.100
+  api: !include commons/api.yaml
+  logger: !include commons/logger.yaml
+  covers: !include coverremote/covers.yaml
+  button_up: !include
+    file: coverremote/momentary_switch.yaml
+    vars:
+      name: up
+      id: up
+      pin: D1
+      duration: ${press_duration}
+  button_stop: !include
+    file: coverremote/momentary_switch.yaml
+    vars:
+      name: stop
+      id: stop
+      pin: D2
+      duration: ${press_duration}
+  button_down: !include
+    file: coverremote/momentary_switch.yaml
+    vars:
+      name: down
+      id: down
+      pin: D3
+      duration: ${press_duration}
+  button_channel_up: !include
+    file: coverremote/momentary_switch.yaml
+    vars:
+      name: "Channel +"
+      id: channel_up
+      pin: D5
+      duration: ${channel_press_duration}
+  button_A: !include
+    file: coverremote/momentary_switch.yaml
+    vars:
+      name: A
+      id: a
+      pin: D6
+      duration: ${press_duration}
+  button_B: !include
+    file: coverremote/momentary_switch.yaml
+    vars:
+      name: B
+      id: b
+      pin: D7
+      duration: ${press_duration}
+  alim: !include 
+    file: coverremote/alim.yaml
+    vars: 
+      pin: D8
+
+esp8266:
+  board: d1_mini
+
+number:
+  - platform: template
+    id: current_channel
+    step: 1
+    name: Channel
+    optimistic: true
+    min_value: 0
+    max_value: ${channel_count}     
+    
+globals:
+   - id: last_cmd_time
+     type: int
+     restore_value: no
+     initial_value: "-100"
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Paris"
+
+script:
+  - id: reset
+    then:
+      - switch.turn_off: alim
+      - delay: 40ms
+      - switch.turn_on: alim
+      - delay: 3s
+  - id: wake_up
+    then: 
+      - if:
+          condition: 
+            - lambda: |-
+                return id(sntp_time).now().timestamp - id(last_cmd_time) > 9;
+          then:
+            - switch.turn_on: stop
+            - wait_until: 
+                condition: 
+                  - switch.is_off: stop
+            - delay: ${release_duration}
+  - id: set_channel
+    parameters:
+      channel: int
+    then: 
+      - while: 
+          condition: 
+            lambda: "return static_cast<int>(id(current_channel).state) != channel;"
+          then:
+            - switch.turn_on: channel_up
+            - wait_until: 
+                condition: 
+                  - switch.is_off: channel_up
+            - number.increment: current_channel
+            - delay: ${release_duration}
+  - id: command_cover
+    parameters: 
+      channel: int
+      command: string
+    mode: queued
+    then:
+      - logger.log:
+          level: INFO
+          format: "Moving cover %d"
+          args: ["channel"]
+      - script.execute: wake_up
+      - script.wait: wake_up
+      - script.execute: 
+          id: set_channel
+          channel: !lambda return channel;
+      - script.wait : set_channel
+      - if: 
+          condition: 
+            lambda: 'return command == "up";'
+          then: 
+            - switch.turn_on: up
+          else: 
+            if:
+              condition: 
+                lambda: 'return command == "down";'
+              then: 
+                - switch.turn_on: down
+              else: 
+                - switch.turn_on: stop
+      - wait_until: 
+          condition: 
+            and:
+              - switch.is_off: up
+              - switch.is_off: down
+              - switch.is_off: stop
+      - lambda: |-
+          id(last_cmd_time) = id(sntp_time).now().timestamp;
+      - logger.log:
+          format: "TIME : %d"
+          args: ["id(last_cmd_time)"]
+      
+      - delay: ${command_idle_duration}
+      - logger.log:
+          level: INFO
+          format: "Moving cover %d done"
+          args: ["channel"]
+        
+  
+
+  

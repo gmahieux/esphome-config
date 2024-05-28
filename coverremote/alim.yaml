@@ -1,0 +1,19 @@
+esphome:
+  on_boot: 
+    priority: 400
+    then:
+      - switch.turn_on: alim
+
+switch:
+  - platform: gpio
+    id: alim
+    name: "Alim"
+    pin: 
+      number: ${pin}
+      mode: 
+        output: True 
+    on_turn_on: 
+      then:
+        - number.set:
+            id: current_channel
+            value: 0

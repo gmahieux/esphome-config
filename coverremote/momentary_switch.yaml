@@ -1,0 +1,14 @@
+switch:
+  - platform: gpio
+    name: ${name}
+    id: ${id}
+    pin: 
+      number: ${pin}
+      mode:
+        output: True
+        open_drain: True
+      inverted: True
+    on_turn_on: 
+      then:
+        - delay: ${duration}
+        - switch.turn_off: ${id}

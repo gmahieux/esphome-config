@@ -1,0 +1,24 @@
+cover:
+  - platform: template
+    assumed_state: True
+    name: "Channel ${channel}"
+    has_position: False
+    optimistic: True
+    close_action: 
+      then:
+        - script.execute: 
+            id: command_cover
+            channel: ${channel}
+            command: down
+    open_action: 
+      then:
+        - script.execute: 
+            id: command_cover
+            channel: ${channel}
+            command: up
+    stop_action: 
+      then:
+        - script.execute: 
+            id: command_cover
+            channel: ${channel}
+            command: stop

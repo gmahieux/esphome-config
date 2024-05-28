@@ -1,0 +1,29 @@
+packages:
+  cover0: !include 
+    file: cover.yaml
+    vars:
+      channel: 0 
+  cover1: !include 
+    file: cover.yaml
+    vars:
+      channel: 1
+  cover2: !include 
+    file: cover.yaml
+    vars:
+      channel: 2
+  cover3: !include 
+    file: cover.yaml
+    vars:
+      channel: 3
+  cover4: !include 
+    file: cover.yaml
+    vars:
+      channel: 4 
+  cover5: !include 
+    file: cover.yaml
+    vars:
+      channel: 5
+  cover6: !include 
+    file: cover.yaml
+    vars:
+      channel: 6 
