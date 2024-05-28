@@ -1,0 +1,59 @@
+substitutions:
+  press_duration: 250ms
+  associate_duration: 5250ms
+
+esphome:
+  on_boot: 
+    priority: 300
+    then:
+      - delay: 1000ms
+      - switch.turn_on: ${id}_stop
+      - delay: ${press_duration}
+      - switch.turn_off: ${id}_stop    
+
+packages:
+  button_up: !include
+    file: switch.yaml
+    vars:
+      switch_id: ${id}_up
+      pin: ${pin_up}
+  button_stop: !include
+    file: switch.yaml
+    vars:
+      switch_id: ${id}_stop
+      pin: ${pin_stop}
+  button_down: !include
+    file: switch.yaml
+    vars:
+      switch_id: ${id}_down
+      pin: ${pin_down}
+
+cover:
+  - platform: template
+    assumed_state: True
+    name: "Volet roulant ${name}"
+    has_position: False
+    optimistic: True
+    close_action: 
+      then:
+        - lambda: id(cover_queue).push_back(id(${id}_down));
+        - script.execute: process_queue
+    open_action: 
+      then:
+        - lambda: id(cover_queue).push_back(id(${id}_up));
+        - script.execute: process_queue
+    stop_action: 
+      then:
+        - lambda: id(cover_queue).push_back(id(${id}_stop));
+        - script.execute: process_queue
+button:
+  - platform: template
+    name: "${name} associate"
+    id: ${id}_associate
+    on_press: 
+      then:
+        - switch.turn_on: ${id}_up
+        - switch.turn_on: ${id}_down
+        - delay: ${associate_duration}
+        - switch.turn_off: ${id}_up
+        - switch.turn_off: ${id}_down

@@ -1,0 +1,93 @@
+substitutions:
+  system_name: coversremote
+  friendly_name: "Covers Remote"
+  device_description: "Controls the 6 delta dore covers"
+  press_duration: 350ms
+  release_duration: 500ms
+
+esp32:
+  board: esp32s3box
+  
+packages:
+  restart: !include commons/restart.yaml
+  device: !include commons/device.yaml
+  wifi: !include 
+    file: commons/wifi.yaml
+    vars:
+      ip: 192.168.1.100
+  api: !include commons/api.yaml
+  logger: !include commons/logger.yaml
+  cover_arthur: !include 
+    file: coverremote/simple_remote.yaml
+    vars:
+      id: cover_arthur
+      name: Arthur
+      pin_up: 48
+      pin_stop: 47
+      pin_down: 21
+  cover_sdj: !include
+    file: coverremote/multi_channel_remote.yaml
+    vars:
+      id: cover_cuisine
+      name: "Cuisine"
+      pin_up: 9
+      pin_stop: 10
+      pin_down: 11
+  cover_ghislain: !include
+    file: coverremote/simple_remote.yaml
+    vars:
+      id: cover_ghislain
+      name: "Ghislain"
+      pin_up: 17
+      pin_stop: 18
+      pin_down: 8
+  cover_salon: !include
+    file: coverremote/multi_channel_remote.yaml
+    vars:
+      id: cover_salon
+      name: "Salon"
+      pin_up: 7
+      pin_stop: 15
+      pin_down: 16
+  cover_cuisine: !include
+    file: coverremote/simple_remote.yaml
+    vars:
+      id: cover_sdj
+      name: "Salle de jeux"
+      pin_up: 4
+      pin_stop: 5
+      pin_down: 6
+  cover_sejour: !include
+    file: coverremote/simple_remote.yaml
+    vars:
+      id: cover_sejour
+      name: "Séjour"
+      pin_up: 42
+      pin_stop: 41
+      pin_down: 40
+
+globals:
+  - id: cover_queue
+    type: 'std::vector<switch_::Switch*>'
+    restore_value: false
+
+script:
+  - id: process_queue
+    mode: single
+    then:
+      while:
+        condition:
+          lambda: 'return !id(cover_queue).empty();'
+        then:
+          - lambda: | 
+              (id(cover_queue).front())->turn_on();
+              return;
+          - delay: ${press_duration}
+          - lambda: |
+              (id(cover_queue).front())->turn_off();
+              id(cover_queue).erase(id(cover_queue).begin());
+              return;
+          - delay: ${release_duration}
+                    
+
+

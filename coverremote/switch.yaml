@@ -1,0 +1,9 @@
+switch:
+  - platform: gpio
+    id: ${switch_id}
+    pin: 
+      number: ${pin}
+      mode:
+        output: True
+        open_drain: True
+      inverted: True
