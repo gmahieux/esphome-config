@@ -1,0 +1,5 @@
+/.esphome/
+/secrets.yaml
+/.platformio
+/trash
+/venv
