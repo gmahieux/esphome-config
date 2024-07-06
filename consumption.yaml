@@ -1,0 +1,296 @@
+substitutions:
+  system_name: conso-elec
+  friendly_name: "Electrical consumption"
+  device_description: "measures electrical comsumption"
+
+esp8266:
+  board: d1_mini
+
+packages:
+  device: !include commons/device.yaml
+  restart: !include commons/restart.yaml
+  api: !include commons/api.yaml
+  logger: !include commons/logger.yaml
+  wifi: !include 
+    file: commons/wifi.yaml
+    vars:
+      ip: 192.168.1.101
+  
+
+# Protocole du JSK
+uart:
+  id: mod_bus
+  tx_pin: 1
+  rx_pin: 3
+  baud_rate: 4800
+  stop_bits: 1
+#  debug:
+#    direction: BOTH
+#    dummy_receiver: false
+#    after:
+#      timeout: 150ms
+#    sequence:
+#      - lambda: |-
+#          UARTDebug::log_string(direction, bytes);
+
+
+modbus:
+  # flow_control_pin: 5
+  send_wait_time: 200ms
+  id: modbus1
+
+modbus_controller:
+  - id: jsymk
+    ## the Modbus device addr
+    address: 0x1
+    modbus_id: modbus1
+    update_interval: 2s
+    command_throttle: 50ms
+    # setup_priority: -10
+
+sensor:  
+# # tension de l'alimentation
+#   - platform: modbus_controller
+#     modbus_controller_id: jsymk
+#     id: Tore_Voltage
+#     #name: "EDF Voltage"
+#     address: 0x0048
+#     unit_of_measurement: "V"
+#     register_type: holding
+#     value_type: U_DWORD
+#     accuracy_decimals: 1
+#     filters:
+#       - multiply: 0.0001
+#     register_count: 1
+#     response_size: 4
+
+# # Intensité traversant le tore
+#   - platform: modbus_controller
+#     modbus_controller_id: jsymk
+#     id: Tore_Current
+#     #name: "EDF Current"
+#     address: 0x0049
+#     unit_of_measurement: "A"
+#     register_type: holding
+#     value_type: U_DWORD
+#     accuracy_decimals: 1
+#     filters:
+#       - multiply: 0.0001
+#     register_count: 1
+#     response_size: 4
+
+# # Puissance traversant le tore
+#   - platform: modbus_controller
+#     modbus_controller_id: jsymk
+#     id: Tore_Active_Power
+#     #name: "Active Power"
+#     address: 0x004A
+#     unit_of_measurement: "W"
+#     register_type: holding
+#     value_type: U_DWORD
+#     accuracy_decimals: 1
+#     filters:
+#       - multiply: 0.0001
+#     register_count: 1
+#     response_size: 4
+
+# # Energie lue dans le tore
+#   - platform: modbus_controller
+#     modbus_controller_id: jsymk
+#     id: Tore_Active_Energy
+#     #name: "Active Energy"
+#     address: 0x004B
+#     unit_of_measurement: "kWh"
+#     register_type: holding
+#     value_type: U_DWORD
+#     accuracy_decimals: 1
+#     filters:
+#       - multiply: 0.0001
+#     register_count: 1
+#     response_size: 4
+
+# # Energie lue dans le tore
+#   - platform: modbus_controller
+#     modbus_controller_id: jsymk
+#     id: Tore_Power_Factor
+#     #name: "Power Factor"
+#     address: 0x004C
+#     register_type: holding
+#     value_type: U_DWORD
+#     accuracy_decimals: 1
+#     filters:
+#       - multiply: 0.0001
+#     register_count: 1
+#     response_size: 4
+
+# # Energie NEG lue dans le tore
+#   - platform: modbus_controller
+#     modbus_controller_id: jsymk
+#     id: Tore_Negative_Active_Energy
+#     #name: "${friendly_name} Energie ECS Neg JSYMK"
+#     address: 0x004D
+#     unit_of_measurement: "kWh"
+#     register_type: holding
+#     value_type: U_DWORD
+#     accuracy_decimals: 1
+#     filters:
+#       - multiply: 0.0001     
+#     register_count: 1
+#     response_size: 4 
+
+# Sens du courant dans la pince
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: Clamp_Power_Direction
+    address: 0x004E
+    register_type: holding
+    value_type: U_DWORD
+    bitmask: 0X00010000
+    filters:
+      - multiply: 1
+    register_count: 1
+    response_size: 4
+    on_value:
+      then:
+        - lambda: |-
+            if ( x == 0) {
+              id(edf_injection).publish_state(0);
+            } else {
+              id(edf_injection).publish_state(1);
+            }
+
+# # Sens du courant dans le tore
+#   - platform: modbus_controller
+#     modbus_controller_id: jsymk
+#     id: Tore_Power_Direction
+#     #name: "${friendly_name} Sens_Tore JSYMK"
+#     address: 0x004E
+#     register_type: holding
+#     value_type: U_DWORD
+#     accuracy_decimals: 0
+#     bitmask: 0X01000000
+#     filters:
+#       - multiply: 1
+#     register_count: 1
+#     response_size: 4
+
+# Fréquence de l'alimentation  
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: Frequency
+    name: "Frequency"
+    address: 0x004F
+    unit_of_measurement: "hz"    
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.01
+    register_count: 1
+    response_size: 4
+
+# tension de l'alimentation
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: Clamp_Voltage
+    name: "EDF Voltage"
+    address: 0x0050
+    unit_of_measurement: "V"
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.0001
+    register_count: 1
+    response_size: 4
+    
+# Intensité lue dans la pince
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: Clamp_Current
+    name: "EDF Current"
+    address: 0x0051
+    unit_of_measurement: "A"
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.0001
+    register_count: 1
+    response_size: 4
+
+# puissance lue dans la pince
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: Clamp_Active_Power
+    name: "EDF Conso Instantanee"
+    address: 0x0052
+    unit_of_measurement: "W"
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.0001
+      - lambda: |-
+          if ( id(edf_injection).state) {
+            return -x;
+          }
+          return x;
+    register_count: 1
+    response_size: 4    
+    state_class: "measurement"  
+
+
+# Energie lue dans la pince
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: Clamp_Active_Energy
+    name: "EDF Energie Soutiree"
+    address: 0x0053
+    unit_of_measurement: "kWh"
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.0001
+    register_count: 1
+    response_size: 4
+    device_class: energy
+    state_class: total_increasing
+
+# Energie lue dans le tore
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: Clamp_Power_Factor
+    name: "EDF Power Factor"
+    address: 0x0054
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: 1
+    filters:
+      - multiply: 0.0001
+    register_count: 1
+    response_size: 4
+
+# Energie NEG lue dans le tore
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: Clamp_Negative_Active_Energy
+    name: "EDF Energie Injectee"
+    address: 0x0055
+    unit_of_measurement: "kWh"
+    register_type: holding
+    value_type: U_DWORD
+    accuracy_decimals: 3
+    filters:
+      - multiply: 0.0001     
+    register_count: 1
+    response_size: 4 
+    device_class: energy
+    state_class: total_increasing
+
+    
+binary_sensor:
+  - platform: template
+    id: edf_injection
+    name: "EDF Injection"
