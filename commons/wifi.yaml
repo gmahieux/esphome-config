@@ -12,6 +12,7 @@ wifi:
     password: !secret wifi_password3
   
   power_save_mode: none
+  output_power: 8.5dB
   manual_ip: 
     gateway: 192.168.1.254
     subnet: 255.255.255.0
