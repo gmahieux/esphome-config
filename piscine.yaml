@@ -1,0 +1,98 @@
+substitutions:
+  system_name: pool
+  friendly_name: "Pool"
+  device_description: "Controls pool pump and treatment"
+
+esp32:
+  variant: esp32s3
+  framework:
+    type: esp-idf
+  
+packages:
+  restart: !include commons/restart.yaml
+  device: !include commons/device.yaml
+  wifi: !include
+    file: commons/wifi.yaml
+    vars:
+      ip: 192.168.1.103
+  api: !include commons/api.yaml
+  logger: !include commons/logger.yaml
+
+switch:
+  - platform: gpio
+    id: pump_off
+    internal: true
+    pin: 4
+    interlock: &pump_interlock [pump_off, pump_speed1, pump_speed2, pump_speed3]
+    interlock_wait_time: 200ms
+
+  - platform: gpio
+    id: pump_speed1
+    internal: true
+    pin: 5
+    interlock: *pump_interlock
+    interlock_wait_time: 200ms
+
+  - platform: gpio
+    id: pump_speed2
+    internal: true
+    pin: 6
+    interlock: *pump_interlock
+    interlock_wait_time: 200ms
+
+  - platform: gpio
+    id: pump_speed3
+    internal: true
+    pin: 7
+    interlock: *pump_interlock
+    interlock_wait_time: 200ms
+
+  - platform: gpio
+    id: relais
+    name: "Traitement"
+    pin:
+      number: 1
+      inverted: true
+
+select:
+  - platform: template
+    name: "Pompe"
+    id: pump_select
+    options:
+      - "Arrêt"
+      - "Vitesse 1"
+      - "Vitesse 2"
+      - "Vitesse 3"
+    initial_option: "Arrêt"
+    optimistic: true
+    set_action:
+      - lambda: |-
+          if (x == "Arrêt")     id(pump_off).turn_on();
+          else if (x == "Vitesse 1") id(pump_speed1).turn_on();
+          else if (x == "Vitesse 2") id(pump_speed2).turn_on();
+          else if (x == "Vitesse 3") id(pump_speed3).turn_on();
+
+ 
+
+one_wire:
+  - platform: gpio
+    pin: 16
+
+sensor:
+  - platform: dallas_temp
+    name: "Température Eau"
+    accuracy_decimals: 1
+    update_interval: 60s
+
+  - platform: dht
+    model: DHT22
+    pin: 15
+    temperature:
+      name: "Température extérieure"
+      accuracy_decimals: 1
+    humidity:
+      name: "Humidité extérieure"
+      accuracy_decimals: 1
+    update_interval: 60s
+    
+
