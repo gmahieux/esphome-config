@@ -5,16 +5,47 @@ substitutions:
 
 esphome:
   on_boot:
-    priority: -100
-    then:
-      - if:
-          condition:
-            or:
-              - switch.is_on: pump_speed1
-              - switch.is_on: pump_speed2
-              - switch.is_on: pump_speed3
-          then:
-            - switch.turn_on: relais_traitement
+    - priority: -100
+      then:
+        - if:
+            condition:
+              or:
+                - switch.is_on: pump_speed1
+                - switch.is_on: pump_speed2
+                - switch.is_on: pump_speed3
+            then:
+              - switch.turn_on: relais_traitement
+    - priority: -101
+      then:
+        - lambda: |-
+            ESP_LOGD("Boot", "pump_off=%d speed1=%d speed2=%d speed3=%d",
+              id(pump_off).state, id(pump_speed1).state, id(pump_speed2).state, id(pump_speed3).state);
+        - wait_until:
+            condition:
+              api.connected:
+                state_subscription_only: True
+            timeout: 30s
+        - homeassistant.action:
+            action: notify.notify
+            data:
+              title: Piscine
+            data_template:
+              message: |-
+                Le contrôleur vient de démarrer.
+                Pompe : {{ pump_state }}.
+                Traitement : {{ traitement_state }}.
+            variables:
+              pump_state: |-
+                if (id(pump_speed1).state) return std::string("Vitesse 1");
+                if (id(pump_speed2).state) return std::string("Vitesse 2");
+                if (id(pump_speed3).state) return std::string("Vitesse 3");
+                return std::string("Arrêt");
+              traitement_state: |-
+                if (id(relais_traitement).state) {
+                  return "On";
+                } else {
+                  return "Off";
+                }
 
 esp32:
   variant: esp32s3
