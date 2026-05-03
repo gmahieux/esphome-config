@@ -112,6 +112,15 @@ switch:
     pin:
       number: 1
       inverted: true
+    on_turn_on:
+      - if:
+          condition:
+            and:
+              - switch.is_off: pump_speed1
+              - switch.is_off: pump_speed2
+              - switch.is_off: pump_speed3
+          then:
+            - switch.turn_off: relais_traitement
 
 select:
   - platform: template
