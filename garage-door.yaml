@@ -1,0 +1,63 @@
+substitutions:
+  system_name: garage-door
+  friendly_name: "Garage Door"
+  device_description: "Dual garage door dry-contact trigger"
+
+esp8266:
+  board: d1_mini
+
+packages:
+  device: !include commons/device.yaml
+  restart: !include commons/restart.yaml
+  api: !include commons/api.yaml
+  logger: !include commons/logger.yaml
+  wifi: !include
+    file: commons/wifi.yaml
+    vars:
+      ip: 192.168.1.104
+
+switch:
+  - platform: gpio
+    name: "Garage 1"
+    id: garage_1
+    pin:
+      number: GPIO4  # D2 — boot-safe, no boot constraints
+      inverted: true # active-LOW relay (HL-52S)
+    on_turn_on:
+      - delay: 500ms
+      - switch.turn_off: garage_1
+
+  - platform: gpio
+    name: "Garage 2"
+    id: garage_2
+    pin:
+      number: GPIO5  # D1 — boot-safe, no boot constraints
+      inverted: true # active-LOW relay (HL-52S)
+    on_turn_on:
+      - delay: 500ms
+      - switch.turn_off: garage_2
+
+binary_sensor:
+  - platform: gpio
+    name: "Garage 1 Door"
+    pin:
+      number: GPIO12  # D6 — boot-safe, no boot constraints
+      mode:
+        input: true
+        pullup: true
+    device_class: garage_door
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
+
+  - platform: gpio
+    name: "Garage 2 Door"
+    pin:
+      number: GPIO13  # D7 — boot-safe, no boot constraints
+      mode:
+        input: true
+        pullup: true
+    device_class: garage_door
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
