@@ -21,6 +21,12 @@ esp32:
   framework:
     type: esp-idf
   
+globals:
+  - id: traitement_delay_remaining
+    type: int
+    restore_value: no
+    initial_value: '0'
+
 packages:
   restart: !include commons/restart.yaml
   device: !include commons/device.yaml
@@ -52,7 +58,11 @@ switch:
     interlock: &pump_interlock [pump_off, pump_speed1, pump_speed2, pump_speed3]
     on_turn_on:
       - component.update: pump_select
+      - script.stop: start_traitement_delay
+      - lambda: 'id(traitement_delay_remaining) = 0;'
       - switch.turn_off: relais_traitement
+    on_turn_off:
+      - script.execute: start_traitement_delay
 
   - platform: gpio
     id: pump_speed3
@@ -63,7 +73,6 @@ switch:
     interlock_wait_time: 200ms
     on_turn_on:
       - component.update: pump_select
-      - switch.turn_on: relais_traitement
 
   - platform: gpio
     id: pump_speed2
@@ -74,7 +83,6 @@ switch:
     interlock_wait_time: 200ms
     on_turn_on:
       - component.update: pump_select
-      - switch.turn_on: relais_traitement
 
   - platform: gpio
     id: pump_speed1
@@ -85,7 +93,6 @@ switch:
     interlock_wait_time: 200ms
     on_turn_on:
       - component.update: pump_select
-      - switch.turn_on: relais_traitement
 
   - platform: gpio
     id: relais_traitement
@@ -94,6 +101,8 @@ switch:
       number: 1
       inverted: true
     on_turn_on:
+      - script.stop: start_traitement_delay
+      - lambda: 'id(traitement_delay_remaining) = 0;'
       - if:
           condition:
             and:
@@ -128,11 +137,46 @@ select:
           else if (x == "Vitesse 2") id(pump_speed2).turn_on();
           else if (x == "Vitesse 3") id(pump_speed3).turn_on();
 
+number:
+  - platform: template
+    name: "Delai avant Traitement (minutes)"
+    id: traitement_delay_minutes
+    optimistic: true
+    restore_value: true
+    initial_value: 5
+    min_value: 0
+    max_value: 10
+    step: 1
+    mode: slider
+    unit_of_measurement: "min"
+    entity_category: "config"
+
+script:
+  - id: start_traitement_delay
+    mode: single
+    then:
+      - lambda: 'id(traitement_delay_remaining) = (int) (id(traitement_delay_minutes).state * 60);'
+      - while:
+          condition:
+            lambda: 'return id(traitement_delay_remaining) > 0;'
+          then:
+            - delay: 1s
+            - lambda: 'id(traitement_delay_remaining) -= 1;'
+      - switch.turn_on: relais_traitement
+
 one_wire:
   - platform: gpio
     pin: 16
 
 sensor:
+  - platform: template
+    name: "Delai avant Traitement"
+    id: traitement_delay_sensor
+    unit_of_measurement: "s"
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: 'return id(traitement_delay_remaining);'
+
   - platform: dallas_temp
     name: "Température Eau"
     accuracy_decimals: 1
