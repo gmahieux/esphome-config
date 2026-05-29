@@ -17,6 +17,10 @@ packages:
       ip: 192.168.1.100
   api: !include commons/api.yaml
   logger: !include commons/logger.yaml
+  startup_notification: !include
+    file: commons/startup_notification.yaml
+    vars:
+      notification_title: "Covers Remote"
   cover_arthur: !include 
     file: coverremote/simple_remote.yaml
     vars:

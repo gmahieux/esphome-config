@@ -1,0 +1,22 @@
+substitutions:
+  status_lambda: 'return std::string("");'
+
+esphome:
+  on_boot:
+    - priority: -200
+      then:
+        - wait_until:
+            condition:
+              api.connected:
+                state_subscription_only: True
+            timeout: 30s
+        - homeassistant.action:
+            action: notify.notify
+            data:
+              title: ${notification_title}
+            data_template:
+              message: "Le contrôleur vient de démarrer.{{ status }}"
+            variables:
+              status: |-
+                std::string _s = [&]() -> std::string { ${status_lambda} }();
+                return _s.empty() ? _s : std::string("\n") + _s;

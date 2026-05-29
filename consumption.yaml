@@ -11,6 +11,10 @@ packages:
   restart: !include commons/restart.yaml
   api: !include commons/api.yaml
   logger: !include commons/logger.yaml
+  startup_notification: !include
+    file: commons/startup_notification.yaml
+    vars:
+      notification_title: "Electrical Consumption"
   wifi: !include 
     file: commons/wifi.yaml
     vars:
