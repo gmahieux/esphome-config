@@ -94,6 +94,13 @@ switch:
     on_turn_on:
       - component.update: pump_select
 
+  - platform: template
+    name: "Autostart"
+    id: autostart_enabled
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+
   - platform: gpio
     id: relais_traitement
     name: "Traitement"
@@ -163,6 +170,35 @@ script:
             - delay: 1s
             - lambda: 'id(traitement_delay_remaining) -= 1;'
       - switch.turn_on: relais_traitement
+
+datetime:
+  - platform: template
+    name: "Heure de démarrage"
+    id: autostart_time
+    type: time
+    optimistic: true
+    restore_value: true
+    initial_value: "08:00:00"
+    entity_category: config
+
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time:
+      - seconds: 0
+        minutes: '*'
+        then:
+          - if:
+              condition:
+                and:
+                  - switch.is_on: autostart_enabled
+                  - switch.is_on: pump_off
+                  - lambda: |-
+                      auto now = id(ha_time).now();
+                      return now.hour == id(autostart_time).hour
+                          && now.minute == id(autostart_time).minute;
+              then:
+                - switch.turn_on: pump_speed1
 
 one_wire:
   - platform: gpio
