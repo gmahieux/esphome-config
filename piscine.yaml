@@ -109,6 +109,7 @@ switch:
   - platform: template
     name: "Autostart"
     id: autostart_enabled
+    icon: "mdi:clock-start"
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
@@ -116,6 +117,7 @@ switch:
   - platform: template
     name: "Autostop"
     id: autostop_enabled
+    icon: "mdi:clock-end"
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
@@ -123,6 +125,7 @@ switch:
   - platform: gpio
     id: relais_traitement
     name: "Traitement"
+    icon: "mdi:flask-outline"
     pin:
       number: 1
       inverted: true
@@ -142,6 +145,7 @@ select:
   - platform: template
     name: "Pompe"
     id: pump_select
+    icon: "mdi:pump"
     options:
       - "Arrêt"
       - "Vitesse 1"
@@ -167,6 +171,7 @@ number:
   - platform: template
     name: "Delai avant Traitement (minutes)"
     id: traitement_delay_minutes
+    icon: "mdi:timer-cog-outline"
     optimistic: true
     restore_value: true
     initial_value: 5
@@ -180,6 +185,7 @@ number:
   - platform: template
     name: "Durée de filtration maximum"
     id: filtration_max_hours
+    icon: "mdi:clock-alert-outline"
     optimistic: true
     restore_value: true
     initial_value: 12
@@ -207,6 +213,7 @@ datetime:
   - platform: template
     name: "Heure de démarrage"
     id: autostart_time
+    icon: "mdi:clock-time-eight-outline"
     type: time
     optimistic: true
     restore_value: true
@@ -216,6 +223,7 @@ datetime:
   - platform: template
     name: "Heure de remise à zéro"
     id: runtime_reset_time
+    icon: "mdi:backup-restore"
     type: time
     optimistic: true
     restore_value: true
@@ -275,6 +283,7 @@ sensor:
   - platform: dallas_temp
     name: "Température Eau"
     id: temperature_eau
+    icon: "mdi:pool-thermometer"
     accuracy_decimals: 1
     update_interval: 60s
 
@@ -292,6 +301,7 @@ sensor:
   - platform: template
     name: "Delai avant Traitement"
     id: traitement_delay_sensor
+    icon: "mdi:timer-sand"
     unit_of_measurement: "s"
     accuracy_decimals: 0
     update_interval: 10s
@@ -299,6 +309,7 @@ sensor:
 
   - platform: template
     name: "Durée Vitesse 1 (aujourd'hui)"
+    icon: "mdi:speedometer-slow"
     unit_of_measurement: "min"
     accuracy_decimals: 0
     update_interval: 60s
@@ -306,6 +317,7 @@ sensor:
 
   - platform: template
     name: "Durée Vitesse 2 (aujourd'hui)"
+    icon: "mdi:speedometer-medium"
     unit_of_measurement: "min"
     accuracy_decimals: 0
     update_interval: 60s
@@ -313,6 +325,7 @@ sensor:
 
   - platform: template
     name: "Durée Vitesse 3 (aujourd'hui)"
+    icon: "mdi:speedometer"
     unit_of_measurement: "min"
     accuracy_decimals: 0
     update_interval: 60s
@@ -321,6 +334,7 @@ sensor:
   - platform: template
     name: "Durée de filtration totale (aujourd'hui)"
     id: filtration_total_min
+    icon: "mdi:timelapse"
     unit_of_measurement: "min"
     accuracy_decimals: 0
     update_interval: never
@@ -330,6 +344,7 @@ sensor:
   - platform: template
     name: "Durée de filtration cible"
     id: filtration_target_min
+    icon: "mdi:target"
     unit_of_measurement: "min"
     accuracy_decimals: 0
     update_interval: never
@@ -344,6 +359,7 @@ sensor:
   - platform: template
     name: "Durée de filtration restante"
     id: filtration_remaining_min
+    icon: "mdi:progress-clock"
     unit_of_measurement: "min"
     accuracy_decimals: 0
     update_interval: never
@@ -359,6 +375,7 @@ binary_sensor:
   - platform: template
     name: "Quota de filtration atteint"
     id: filtration_quota_reached
+    icon: "mdi:check-decagram-outline"
     lambda: |-
       float remaining = id(filtration_remaining_min).state;
       if (isnan(remaining)) return false;
