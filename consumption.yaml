@@ -65,7 +65,6 @@ sensor:
 #     accuracy_decimals: 1
 #     filters:
 #       - multiply: 0.0001
-#     register_count: 1
 #     response_size: 4
 
 # # Intensité traversant le tore
@@ -80,7 +79,6 @@ sensor:
 #     accuracy_decimals: 1
 #     filters:
 #       - multiply: 0.0001
-#     register_count: 1
 #     response_size: 4
 
 # # Puissance traversant le tore
@@ -95,7 +93,6 @@ sensor:
 #     accuracy_decimals: 1
 #     filters:
 #       - multiply: 0.0001
-#     register_count: 1
 #     response_size: 4
 
 # # Energie lue dans le tore
@@ -110,7 +107,6 @@ sensor:
 #     accuracy_decimals: 1
 #     filters:
 #       - multiply: 0.0001
-#     register_count: 1
 #     response_size: 4
 
 # # Energie lue dans le tore
@@ -124,7 +120,6 @@ sensor:
 #     accuracy_decimals: 1
 #     filters:
 #       - multiply: 0.0001
-#     register_count: 1
 #     response_size: 4
 
 # # Energie NEG lue dans le tore
@@ -139,21 +134,30 @@ sensor:
 #     accuracy_decimals: 1
 #     filters:
 #       - multiply: 0.0001     
-#     register_count: 1
 #     response_size: 4 
 
 # Sens du courant dans la pince
+# Lecture unique du bloc 0x004E-0x0055 : le JSY renvoie 4 octets par registre,
+# chaque capteur lit sa tranche via byte_offset dans la meme plage partagee.
+  - platform: modbus_controller
+    modbus_controller_id: jsymk
+    id: jsy_block
+    internal: true
+    address: 0x004E
+    register_type: holding
+    value_type: RAW
+    response_size: 16
+
   - platform: modbus_controller
     modbus_controller_id: jsymk
     id: Clamp_Power_Direction
     address: 0x004E
+    byte_offset: 0
     register_type: holding
     value_type: U_DWORD
     bitmask: 0X00010000
     filters:
       - multiply: 1
-    register_count: 1
-    response_size: 4
     on_value:
       then:
         - lambda: |-
@@ -175,7 +179,6 @@ sensor:
 #     bitmask: 0X01000000
 #     filters:
 #       - multiply: 1
-#     register_count: 1
 #     response_size: 4
 
 # Fréquence de l'alimentation  
@@ -183,52 +186,50 @@ sensor:
     modbus_controller_id: jsymk
     id: Frequency
     name: "Frequency"
-    address: 0x004F
+    address: 0x004E
+    byte_offset: 4
     unit_of_measurement: "hz"    
     register_type: holding
     value_type: U_DWORD
     accuracy_decimals: 1
     filters:
       - multiply: 0.01
-    register_count: 1
-    response_size: 4
 
 # tension de l'alimentation
   - platform: modbus_controller
     modbus_controller_id: jsymk
     id: Clamp_Voltage
     name: "EDF Voltage"
-    address: 0x0050
+    address: 0x004E
+    byte_offset: 8
     unit_of_measurement: "V"
     register_type: holding
     value_type: U_DWORD
     accuracy_decimals: 1
     filters:
       - multiply: 0.0001
-    register_count: 1
-    response_size: 4
     
 # Intensité lue dans la pince
   - platform: modbus_controller
     modbus_controller_id: jsymk
     id: Clamp_Current
     name: "EDF Current"
-    address: 0x0051
+    address: 0x004E
+    byte_offset: 12
     unit_of_measurement: "A"
     register_type: holding
     value_type: U_DWORD
     accuracy_decimals: 1
     filters:
       - multiply: 0.0001
-    register_count: 1
-    response_size: 4
 
 # puissance lue dans la pince
   - platform: modbus_controller
     modbus_controller_id: jsymk
     id: Clamp_Active_Power
     name: "EDF Conso Instantanee"
-    address: 0x0052
+    address: 0x004E
+    byte_offset: 16
     unit_of_measurement: "W"
     register_type: holding
     value_type: U_DWORD
@@ -240,8 +241,6 @@ sensor:
             return -x;
           }
           return x;
-    register_count: 1
-    response_size: 4    
     state_class: "measurement"  
 
 
@@ -250,15 +249,14 @@ sensor:
     modbus_controller_id: jsymk
     id: Clamp_Active_Energy
     name: "EDF Energie Soutiree"
-    address: 0x0053
+    address: 0x004E
+    byte_offset: 20
     unit_of_measurement: "kWh"
     register_type: holding
     value_type: U_DWORD
     accuracy_decimals: 3
     filters:
       - multiply: 0.0001
-    register_count: 1
-    response_size: 4
     device_class: energy
     state_class: total_increasing
 
@@ -267,29 +265,27 @@ sensor:
     modbus_controller_id: jsymk
     id: Clamp_Power_Factor
     name: "EDF Power Factor"
-    address: 0x0054
+    address: 0x004E
+    byte_offset: 24
     register_type: holding
     value_type: U_DWORD
     accuracy_decimals: 1
     filters:
       - multiply: 0.0001
-    register_count: 1
-    response_size: 4
 
 # Energie NEG lue dans le tore
   - platform: modbus_controller
     modbus_controller_id: jsymk
     id: Clamp_Negative_Active_Energy
     name: "EDF Energie Injectee"
-    address: 0x0055
+    address: 0x004E
+    byte_offset: 28
     unit_of_measurement: "kWh"
     register_type: holding
     value_type: U_DWORD
     accuracy_decimals: 3
     filters:
       - multiply: 0.0001     
-    register_count: 1
-    response_size: 4 
     device_class: energy
     state_class: total_increasing
 
