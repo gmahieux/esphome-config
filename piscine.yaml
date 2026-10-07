@@ -240,6 +240,9 @@ time:
               if (id(pump_speed1).state) id(runtime_speed1_min) += 1;
               else if (id(pump_speed2).state) id(runtime_speed2_min) += 1;
               else if (id(pump_speed3).state) id(runtime_speed3_min) += 1;
+          - component.update: filtration_total_min
+          - component.update: filtration_target_min
+          - component.update: filtration_remaining_min
           - if:
               condition:
                 and:
@@ -269,6 +272,23 @@ one_wire:
     pin: 16
 
 sensor:
+  - platform: dallas_temp
+    name: "Température Eau"
+    id: temperature_eau
+    accuracy_decimals: 1
+    update_interval: 60s
+
+  - platform: dht
+    model: DHT22
+    pin: 15
+    temperature:
+      name: "Température extérieure"
+      accuracy_decimals: 1
+    humidity:
+      name: "Humidité extérieure"
+      accuracy_decimals: 1
+    update_interval: 60s
+
   - platform: template
     name: "Delai avant Traitement"
     id: traitement_delay_sensor
@@ -299,11 +319,20 @@ sensor:
     lambda: 'return id(runtime_speed3_min);'
 
   - platform: template
+    name: "Durée de filtration totale (aujourd'hui)"
+    id: filtration_total_min
+    unit_of_measurement: "min"
+    accuracy_decimals: 0
+    update_interval: never
+    lambda: |-
+      return id(runtime_speed1_min) + id(runtime_speed2_min) + id(runtime_speed3_min);
+
+  - platform: template
     name: "Durée de filtration cible"
     id: filtration_target_min
     unit_of_measurement: "min"
     accuracy_decimals: 0
-    update_interval: 60s
+    update_interval: never
     lambda: |-
       float t = id(temperature_eau).state;
       if (isnan(t)) return {};
@@ -312,30 +341,25 @@ sensor:
       if (!isnan(maxh) && h > maxh) h = maxh;
       return h * 60.0f;
 
-  - platform: dallas_temp
-    name: "Température Eau"
-    id: temperature_eau
-    accuracy_decimals: 1
-    update_interval: 60s
+  - platform: template
+    name: "Durée de filtration restante"
+    id: filtration_remaining_min
+    unit_of_measurement: "min"
+    accuracy_decimals: 0
+    update_interval: never
+    lambda: |-
+      float quota = id(filtration_target_min).state;
+      float total = id(filtration_total_min).state;
+      if (isnan(quota) || isnan(total)) return {};
+      float remaining = quota - total;
+      return remaining > 0.0f ? remaining : 0.0f;
 
-  - platform: dht
-    model: DHT22
-    pin: 15
-    temperature:
-      name: "Température extérieure"
-      accuracy_decimals: 1
-    humidity:
-      name: "Humidité extérieure"
-      accuracy_decimals: 1
-    update_interval: 60s
-    
 
 binary_sensor:
   - platform: template
     name: "Quota de filtration atteint"
     id: filtration_quota_reached
     lambda: |-
-      float quota = id(filtration_target_min).state;
-      if (isnan(quota)) return false;
-      int total = id(runtime_speed1_min) + id(runtime_speed2_min) + id(runtime_speed3_min);
-      return total >= (int) quota;
+      float remaining = id(filtration_remaining_min).state;
+      if (isnan(remaining)) return false;
+      return remaining <= 0.0f;
