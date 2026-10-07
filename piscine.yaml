@@ -113,6 +113,13 @@ switch:
     restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
 
+  - platform: template
+    name: "Autostop"
+    id: autostop_enabled
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+
   - platform: gpio
     id: relais_traitement
     name: "Traitement"
@@ -170,6 +177,19 @@ number:
     unit_of_measurement: "min"
     entity_category: "config"
 
+  - platform: template
+    name: "Durée de filtration maximum"
+    id: filtration_max_hours
+    optimistic: true
+    restore_value: true
+    initial_value: 12
+    min_value: 1
+    max_value: 24
+    step: 0.5
+    mode: box
+    unit_of_measurement: "h"
+    entity_category: "config"
+
 script:
   - id: start_traitement_delay
     mode: single
@@ -223,8 +243,20 @@ time:
           - if:
               condition:
                 and:
+                  - switch.is_on: autostop_enabled
+                  - switch.is_off: pump_off
+                  - binary_sensor.is_on: filtration_quota_reached
+              then:
+                - switch.turn_on: pump_off
+          - if:
+              condition:
+                and:
                   - switch.is_on: autostart_enabled
                   - switch.is_on: pump_off
+                  - not:
+                      and:
+                        - switch.is_on: autostop_enabled
+                        - binary_sensor.is_on: filtration_quota_reached
                   - lambda: |-
                       auto now = id(ha_time).now();
                       return now.hour == id(autostart_time).hour
@@ -266,8 +298,23 @@ sensor:
     update_interval: 60s
     lambda: 'return id(runtime_speed3_min);'
 
+  - platform: template
+    name: "Durée de filtration cible"
+    id: filtration_target_min
+    unit_of_measurement: "min"
+    accuracy_decimals: 0
+    update_interval: 60s
+    lambda: |-
+      float t = id(temperature_eau).state;
+      if (isnan(t)) return {};
+      float h = t / 2.0f;
+      float maxh = id(filtration_max_hours).state;
+      if (!isnan(maxh) && h > maxh) h = maxh;
+      return h * 60.0f;
+
   - platform: dallas_temp
     name: "Température Eau"
+    id: temperature_eau
     accuracy_decimals: 1
     update_interval: 60s
 
@@ -283,3 +330,12 @@ sensor:
     update_interval: 60s
     
 
+binary_sensor:
+  - platform: template
+    name: "Quota de filtration atteint"
+    id: filtration_quota_reached
+    lambda: |-
+      float quota = id(filtration_target_min).state;
+      if (isnan(quota)) return false;
+      int total = id(runtime_speed1_min) + id(runtime_speed2_min) + id(runtime_speed3_min);
+      return total >= (int) quota;
