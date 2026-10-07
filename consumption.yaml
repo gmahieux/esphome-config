@@ -186,6 +186,7 @@ sensor:
     modbus_controller_id: jsymk
     id: Frequency
     name: "Frequency"
+    icon: "mdi:sine-wave"
     address: 0x004E
     byte_offset: 4
     unit_of_measurement: "hz"    
@@ -200,6 +201,7 @@ sensor:
     modbus_controller_id: jsymk
     id: Clamp_Voltage
     name: "EDF Voltage"
+    icon: "mdi:flash-outline"
     address: 0x004E
     byte_offset: 8
     unit_of_measurement: "V"
@@ -214,6 +216,7 @@ sensor:
     modbus_controller_id: jsymk
     id: Clamp_Current
     name: "EDF Current"
+    icon: "mdi:current-ac"
     address: 0x004E
     byte_offset: 12
     unit_of_measurement: "A"
@@ -228,6 +231,7 @@ sensor:
     modbus_controller_id: jsymk
     id: Clamp_Active_Power
     name: "EDF Conso Instantanee"
+    icon: "mdi:home-lightning-bolt-outline"
     address: 0x004E
     byte_offset: 16
     unit_of_measurement: "W"
@@ -265,6 +269,7 @@ sensor:
     modbus_controller_id: jsymk
     id: Clamp_Power_Factor
     name: "EDF Power Factor"
+    icon: "mdi:angle-acute"
     address: 0x004E
     byte_offset: 24
     register_type: holding
@@ -294,3 +299,4 @@ binary_sensor:
   - platform: template
     id: edf_injection
     name: "EDF Injection"
+    icon: "mdi:transmission-tower-import"
