@@ -17,6 +17,6 @@ esphome:
             data_template:
               message: "Le contrôleur vient de démarrer.{{ status }}"
             variables:
-              status: |-
+              status: !lambda |-
                 std::string _s = [&]() -> std::string { ${status_lambda} }();
                 return _s.empty() ? _s : std::string("\n") + _s;
